@@ -13,6 +13,9 @@ pipeline {
             env:
               - name: DOCKER_TLS_CERTDIR
                 value: ""
+            command:
+            - cat
+            tty: true
         '''
     }
   }
