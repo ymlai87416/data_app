@@ -77,7 +77,7 @@ spec:
     http:
       paths:
       - pathType: Prefix
-        path: "/data-app/"
+        path: "/data-app"
         backend:
           service:
             name: data-app-svc
