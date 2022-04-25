@@ -1,0 +1,85 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: data-app
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ymlai87416-cluster-tls-replica
+  namespace: data-app
+  annotations:
+    replicator.v1.mittwald.de/replicate-from: cluster/ymlai87416-cluster-tls
+type: kubernetes.io/tls
+# Normally, we'd create an empty destination secret, but secrets of type
+# 'kubernetes.io/tls' are treated in a special way and need to have properties
+# data["tls.crt"] and data["tls.key"] to begin with, though they may be empty.
+data:
+  tls.key: ""
+  tls.crt: ""
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: data-app
+  name: data-app-deploy
+  namespace: data-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: data-app
+  template:
+    metadata:
+      labels:
+        app: data-app
+    spec:
+      containers:
+      - image: ymlai87416/data-app:latest
+        imagePullPolicy: Always
+        name: data-app
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: data-app
+  name: data-app-svc
+  namespace: data-app
+spec:
+  ports:
+  - protocol: TCP
+    port: 8501
+    targetPort: 8501
+  selector:
+    app: data-app
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: data-app-nginx
+  namespace: data-app
+  annotations:
+    kubernetes.io/ingress.class: "nginx"    
+    cert-manager.io/issuer: "letsencrypt-ymlai-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  tls:
+  - hosts:
+    - cluster.ymlai87416.com
+    secretName: ymlai87416-cluster-tls-replica
+  rules:
+  - host: "cluster.ymlai87416.com"
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/data-app/"
+        backend:
+          service:
+            name: data-app-svc
+            port:
+              number: 8501

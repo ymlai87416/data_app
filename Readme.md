@@ -24,3 +24,7 @@ http://localhost:8501/data-app
 ## Reference
 
 [1] Jenkins on Kubernetes - Building Docker Images: khttps://pushbuildtestdeploy.com/jenkins-on-kubernetes-building-docker-images/
+
+[2] https://www.youtube.com/watch?v=alQQ84M4CYU&t=189s 
+
+[3] without docker engine https://www.youtube.com/watch?v=YnZQJAMK6JI

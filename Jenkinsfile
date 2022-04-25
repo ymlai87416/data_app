@@ -1,60 +1,41 @@
 pipeline {
+
+  options {
+    ansiColor('xterm')
+  }
+
   agent {
     kubernetes {
-      yaml '''
-        apiVersion: v1
-        kind: Pod
-        spec:
-          containers:
-          - name: docker
-            image: docker:latest
-            securityContext:
-              privileged: true
-            command:
-            - cat
-            tty: true
-            volumeMounts:
-            - mountPath: /var/run/docker.sock
-              name: docker-sock
-          volumes:
-          - name: docker-sock
-            hostPath:
-              path: /var/run/docker.sock
-        '''
+      yamlFile 'builder.yaml'
     }
   }
-  environment{
-    DOCKERHUB_CREDENTIALS = credentials('ymlai87416-dockerhub')
-  }
+
   stages {
-    stage('Build') {
+
+    stage('Kaniko Build & Push Image') {
       steps {
-        container("docker"){
-          sh '''docker build -t ymlai87416/data-app:latest .'''
-        }
-      }
-    }
-    stage('Login'){
-        steps {
-            container("docker"){
-              sh '''echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'''
-            }
-        }
-    }
-    stage('Push') {
-      steps {
-        container("docker"){
-          sh '''docker push ymlai87416/data-app:latest'''
+        container('kaniko') {
+          script {
+            sh '''
+            /kaniko/executor --dockerfile `pwd`/Dockerfile \
+                             --context `pwd` \
+                             --destination=ymlai87416/data-app:${BUILD_NUMBER}
+            '''
+          }
         }
       }
     }
 
-  }
-  post{
-    always{
-        container("docker"){
-            sh '''docker logout'''
+    stage('Deploy App to Kubernetes') {     
+      steps {
+        container('kubectl') {
+          withCredentials([file(credentialsId: 'mykubeconfig', variable: 'KUBECONFIG')]) {
+            sh 'sed -i "s/<TAG>/${BUILD_NUMBER}/" k8s/stack.yaml'
+            sh 'kubectl apply -f k8s/stack.yaml'
+          }
         }
+      }
     }
+  
   }
 }
