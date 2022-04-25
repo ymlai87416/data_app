@@ -10,9 +10,6 @@ pipeline {
             image: rancher/dind:latest
             securityContext:
               privileged: true
-            env:
-              - name: DOCKER_TLS_CERTDIR
-                value: ""
             command:
             - cat
             tty: true
