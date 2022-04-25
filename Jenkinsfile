@@ -7,10 +7,12 @@ pipeline {
         spec:
           containers:
           - name: docker
-            image: yobasystems/alpine-docker
-            command:
-            - cat
-            tty: true
+            image: docker:19.03.1-dind
+            securityContext:
+              privileged: true
+            env:
+              - name: DOCKER_TLS_CERTDIR
+                value: ""
         '''
     }
   }
@@ -28,7 +30,7 @@ pipeline {
     stage('Login'){
         steps {
             container("docker"){
-            sh '''echo $DOCKERHUB_CREDENTIALS_PSW docker login -u ${DOCKERHUB_CREDENTIALS.username} -p ${DOCKERHUB_CREDENTIALS.password}'''
+            sh '''echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u ${DOCKERHUB_CREDENTIALS.username} '''
             }
         }
     }
