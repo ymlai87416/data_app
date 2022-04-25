@@ -37,7 +37,7 @@ spec:
         app: data-app
     spec:
       containers:
-      - image: ymlai87416/data-app:latest
+      - image: ymlai87416/data-app:<TAG>
         imagePullPolicy: Always
         name: data-app
 
