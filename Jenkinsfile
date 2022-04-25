@@ -7,7 +7,7 @@ pipeline {
         spec:
           containers:
           - name: docker
-            image: docker:19.03.1-dind
+            image: rancher/dind:latest
             securityContext:
               privileged: true
             env:
